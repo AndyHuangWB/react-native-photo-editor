@@ -10,14 +10,14 @@ import UIKit
 import Photos
 import SDWebImage
 import AVFoundation
-//import ZLImageEditor
+// import ZLImageEditor
 
 public enum ImageLoad: Error {
     case failedToLoadImage(String)
 }
 
 @objc(PhotoEditor)
-class PhotoEditor: NSObject, ZLEditImageControllerDelegate {
+class PhotoEditor: NSObject {
     var window: UIWindow?
     var bridge: RCTBridge!
     
@@ -52,30 +52,16 @@ class PhotoEditor: NSObject, ZLEditImageControllerDelegate {
         self.resolve = resolve;
         self.reject = reject;
         
-        // Stickers
-        let stickers = options["stickers"] as? [String] ?? []
-        ZLImageEditorConfiguration.default().imageStickerContainerView = StickerView(stickers: stickers)
-        
-        
         //Config
-        ZLImageEditorConfiguration.default().editDoneBtnBgColor = UIColor(red:255/255.0, green:238/255.0, blue:101/255.0, alpha:1.0)
-
-        ZLImageEditorConfiguration.default().editImageTools = [.draw, .clip, .textSticker]
+      ZLImageEditorConfiguration.default().editImageTools ([.draw, .clip, .textSticker, .mosaic ])
         
-        //Filters Lut
-        do {
-            let filters = ColorCubeLoader()
-            ZLImageEditorConfiguration.default().filters = try filters.load()
-        } catch {
-            assertionFailure("\(error)")
-        }
     }
     
     private func presentController(image: UIImage) {
         if let controller = UIApplication.getTopViewController() {
             controller.modalTransitionStyle = .crossDissolve
             
-            ZLEditImageViewController.showEditImageVC(parentVC:controller , image: image, delegate: self) { [weak self] (resImage, editModel) in
+            ZLEditImageViewController.showEditImageVC(parentVC:controller , image: image) { [weak self] (resImage, editModel) in
                 let documentsPath = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0] as String
                 
                 let destinationPath = URL(fileURLWithPath: documentsPath).appendingPathComponent(String(Int64(Date().timeIntervalSince1970 * 1000)) + ".png")
@@ -86,6 +72,8 @@ class PhotoEditor: NSObject, ZLEditImageControllerDelegate {
                 } catch {
                     debugPrint("writing file error", error)
                 }
+            } cancelBlock: {
+                self.onCancel()
             }
         }
     }
