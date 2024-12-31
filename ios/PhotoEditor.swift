@@ -10,7 +10,7 @@ import UIKit
 import Photos
 import SDWebImage
 import AVFoundation
-// import ZLImageEditor
+import ZLImageEditor
 
 public enum ImageLoad: Error {
     case failedToLoadImage(String)
