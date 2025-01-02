@@ -56,13 +56,13 @@ public class ShapeBSFragment extends BottomSheetDialogFragment implements SeekBa
         // shape picker
         shapeGroup.setOnCheckedChangeListener((group, checkedId) -> {
             if (checkedId == R.id.lineRadioButton) {
-                mProperties.onShapePicked(ShapeType.LINE);
+                mProperties.onShapePicked(ShapeType.Line.INSTANCE);
             } else if (checkedId == R.id.ovalRadioButton) {
-                mProperties.onShapePicked(ShapeType.OVAL);
+                mProperties.onShapePicked(ShapeType.Oval.INSTANCE);
             } else if (checkedId == R.id.rectRadioButton) {
-                mProperties.onShapePicked(ShapeType.RECTANGLE);
+                mProperties.onShapePicked(ShapeType.Rectangle.INSTANCE);
             } else {
-                mProperties.onShapePicked(ShapeType.BRUSH);
+                mProperties.onShapePicked(ShapeType.Brush.INSTANCE);
             }
         });
 

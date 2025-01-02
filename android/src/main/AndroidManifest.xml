@@ -5,10 +5,9 @@
   <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
   <uses-permission android:name="android.permission.INTERNET" />
   <application
-    android:allowBackup="false"
     tools:replace="android:allowBackup"
-    android:requestLegacyExternalStorage="true"
-    >
+    android:allowBackup="true"
+  >
     <activity
       android:name=".activity.PhotoEditorActivity"
       android:configChanges="orientation|keyboardHidden|screenSize" />

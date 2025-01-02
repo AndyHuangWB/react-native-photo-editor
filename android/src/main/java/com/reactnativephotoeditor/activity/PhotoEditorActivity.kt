@@ -13,6 +13,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.util.Log
+import android.view.MotionEvent
 import android.view.View
 import android.view.Window
 import android.view.WindowManager
@@ -20,6 +21,7 @@ import android.view.animation.AnticipateOvershootInterpolator
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.activity.OnBackPressedCallback
 import androidx.annotation.NonNull
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
@@ -79,6 +81,17 @@ open class PhotoEditorActivity : AppCompatActivity(), OnPhotoEditorListener, Vie
     makeFullScreen()
     setContentView(R.layout.photo_editor_view)
     initViews()
+    onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+      override fun handleOnBackPressed() {
+        if (mIsFilterVisible) {
+          showFilter(false)
+        } else if (!mPhotoEditor!!.isCacheEmpty) {
+          showSaveDialog()
+        } else {
+          onCancel()
+        }
+      }
+    })
 
     //intern
     val value = intent.extras
@@ -95,12 +108,12 @@ open class PhotoEditorActivity : AppCompatActivity(), OnPhotoEditorListener, Vie
     mPropertiesBSFragment = PropertiesBSFragment()
     mPropertiesBSFragment!!.setPropertiesChangeListener(this)
 
-    mStickerFragment = StickerFragment()
-    mStickerFragment!!.setStickerListener(this)
+//    mStickerFragment = StickerFragment()
+//    mStickerFragment!!.setStickerListener(this)
 
 //    val stream: InputStream = assets.open("image.png")
 //    val d = Drawable.createFromStream(stream, null)
-    mStickerFragment!!.setData(stickers)
+//    mStickerFragment!!.setData(stickers)
 
     mShapeBSFragment = ShapeBSFragment()
     mShapeBSFragment!!.setPropertiesChangeListener(this)
@@ -114,7 +127,7 @@ open class PhotoEditorActivity : AppCompatActivity(), OnPhotoEditorListener, Vie
     mRvFilters!!.adapter = mFilterViewAdapter
 
     val pinchTextScalable = intent.getBooleanExtra(PINCH_TEXT_SCALABLE_INTENT_KEY, true)
-    mPhotoEditor = PhotoEditor.Builder(this, mPhotoEditorView)
+    mPhotoEditor = PhotoEditor.Builder(this, mPhotoEditorView!!)
       .setPinchTextScalable(pinchTextScalable) // set flag to make text scalable when pinch
       .build() // build photo editor sdk
     mPhotoEditor?.setOnPhotoEditorListener(this)
@@ -207,13 +220,20 @@ open class PhotoEditorActivity : AppCompatActivity(), OnPhotoEditorListener, Vie
   }
 
   override fun onEditTextChangeListener(rootView: View, text: String, colorCode: Int) {
-    val textEditorDialogFragment = TextEditorDialogFragment.show(this, text, colorCode)
+    val textEditorDialogFragment = TextEditorDialogFragment.show(this, text!!, colorCode)
     textEditorDialogFragment.setOnTextEditorListener { inputText: String?, newColorCode: Int ->
       val styleBuilder = TextStyleBuilder()
       styleBuilder.withTextColor(newColorCode)
-      mPhotoEditor!!.editText(rootView, inputText, styleBuilder)
+      mPhotoEditor!!.editText(rootView!!, inputText!!, styleBuilder)
       mTxtCurrentTool!!.setText(R.string.label_text)
     }
+  }
+
+  override fun onTouchSourceImage(event: MotionEvent) {
+    Log.d(
+      TAG,
+      "onTouchSourceImage"
+    )
   }
 
   override fun onAddViewListener(viewType: ViewType, numberOfAddedViews: Int) {
@@ -223,18 +243,18 @@ open class PhotoEditorActivity : AppCompatActivity(), OnPhotoEditorListener, Vie
     )
   }
 
-  override fun onRemoveViewListener(viewType: ViewType, numberOfAddedViews: Int) {
+   override fun onRemoveViewListener(viewType: ViewType, numberOfAddedViews: Int) {
     Log.d(
       TAG,
       "onRemoveViewListener() called with: viewType = [$viewType], numberOfAddedViews = [$numberOfAddedViews]"
     )
   }
 
-  override fun onStartViewChangeListener(viewType: ViewType) {
+   override fun onStartViewChangeListener(viewType: ViewType) {
     Log.d(TAG, "onStartViewChangeListener() called with: viewType = [$viewType]")
   }
 
-  override fun onStopViewChangeListener(viewType: ViewType) {
+   override fun onStopViewChangeListener(viewType: ViewType) {
     Log.d(TAG, "onStopViewChangeListener() called with: viewType = [$viewType]")
   }
 
@@ -356,7 +376,7 @@ open class PhotoEditorActivity : AppCompatActivity(), OnPhotoEditorListener, Vie
       ToolType.SHAPE -> {
         mPhotoEditor!!.setBrushDrawingMode(true)
         mShapeBuilder = ShapeBuilder()
-        mPhotoEditor!!.setShape(mShapeBuilder)
+        mPhotoEditor!!.setShape(mShapeBuilder!!)
         mTxtCurrentTool!!.setText(R.string.label_shape)
         showBottomSheetDialogFragment(mShapeBSFragment)
       }
@@ -365,7 +385,7 @@ open class PhotoEditorActivity : AppCompatActivity(), OnPhotoEditorListener, Vie
         textEditorDialogFragment.setOnTextEditorListener { inputText: String?, colorCode: Int ->
           val styleBuilder = TextStyleBuilder()
           styleBuilder.withTextColor(colorCode)
-          mPhotoEditor!!.addText(inputText, styleBuilder)
+          mPhotoEditor!!.addText(inputText!!, styleBuilder)
           mTxtCurrentTool!!.setText(R.string.label_text)
         }
       }
@@ -415,16 +435,6 @@ open class PhotoEditorActivity : AppCompatActivity(), OnPhotoEditorListener, Vie
     mConstraintSet.applyTo(mRootView)
   }
 
-  override fun onBackPressed() {
-    if (mIsFilterVisible) {
-      showFilter(false)
-      mTxtCurrentTool!!.setText(R.string.app_name)
-    } else if (!mPhotoEditor!!.isCacheEmpty) {
-      showSaveDialog()
-    } else {
-      onCancel()
-    }
-  }
 
   companion object {
     private val TAG = PhotoEditorActivity::class.java.simpleName
