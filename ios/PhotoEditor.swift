@@ -32,12 +32,13 @@ class PhotoEditor: NSObject {
             reject("DONT_FIND_IMAGE", "Dont find image", nil)
             return;
         }
+        let animated = options["animated"] as? Bool ?? true
         
         getUIImage(url: path) { image in
             DispatchQueue.main.async {
                 //  set config
                 self.setConfiguration(options: options, resolve: resolve, reject: reject)
-                self.presentController(image: image)
+                self.presentController(image: image, animated: animated)
             }
         } reject: {_ in
             reject("LOAD_IMAGE_FAILED", "Load image failed: " + path, nil)
@@ -57,11 +58,11 @@ class PhotoEditor: NSObject {
         
     }
     
-    private func presentController(image: UIImage) {
+    private func presentController(image: UIImage, animated: Bool) {
         if let controller = UIApplication.getTopViewController() {
             controller.modalTransitionStyle = .crossDissolve
             
-            ZLEditImageViewController.showEditImageVC(parentVC:controller , image: image) { [weak self] (resImage, editModel) in
+            ZLEditImageViewController.showEditImageVC(parentVC:controller, animate: animated, image: image) { [weak self] (resImage, editModel) in
                 let documentsPath = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0] as String
                 
                 let destinationPath = URL(fileURLWithPath: documentsPath).appendingPathComponent(String(Int64(Date().timeIntervalSince1970 * 1000)) + ".png")

@@ -3,6 +3,7 @@ import { NativeModules } from 'react-native';
 export type Options = {
   path: String;
   stickers: Array<String>;
+  animated: boolean;
 };
 
 export type ErrorCode =

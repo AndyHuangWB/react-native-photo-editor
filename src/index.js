@@ -6,6 +6,7 @@ let exportObject = {};
 const defaultOptions = {
   path: '',
   stickers: [],
+  animated: true,
 };
 
 exportObject = {
