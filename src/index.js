@@ -7,6 +7,7 @@ const defaultOptions = {
   path: '',
   stickers: [],
   animated: true,
+  photoQuality: 0.4,
 };
 
 exportObject = {

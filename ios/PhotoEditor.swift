@@ -18,11 +18,6 @@ public enum ImageLoad: Error {
 
 @objc(PhotoEditor)
 class PhotoEditor: NSObject {
-    var window: UIWindow?
-    var bridge: RCTBridge!
-    
-    var resolve: RCTPromiseResolveBlock!
-    var reject: RCTPromiseRejectBlock!
     
     @objc(open:withResolver:withRejecter:)
     func open(options: NSDictionary, resolve:@escaping RCTPromiseResolveBlock,reject:@escaping RCTPromiseRejectBlock) -> Void {
@@ -33,52 +28,36 @@ class PhotoEditor: NSObject {
             return;
         }
         let animated = options["animated"] as? Bool ?? true
+        let quality = options["photoQuality"] as? CGFloat ?? 0.4
         
         getUIImage(url: path) { image in
             DispatchQueue.main.async {
                 //  set config
-                self.setConfiguration(options: options, resolve: resolve, reject: reject)
-                self.presentController(image: image, animated: animated)
+                ZLImageEditorConfiguration.default().editImageTools ([.draw, .clip, .textSticker, .mosaic ])
+              if let controller = UIApplication.getTopViewController() {
+                  controller.modalTransitionStyle = .crossDissolve
+                  
+                  ZLEditImageViewController.showEditImageVC(parentVC:controller, animate: animated, image: image) { (resImage, editModel) in
+                      let documentsPath = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0] as String
+                      
+                      let destinationPath = URL(fileURLWithPath: documentsPath).appendingPathComponent(String(Int64(Date().timeIntervalSince1970 * 1000)) + ".jpg")
+                      
+                      do {
+                        try resImage.jpegData(compressionQuality: quality)?.write(to: destinationPath)
+                          resolve(destinationPath.absoluteString)
+                      } catch {
+                          debugPrint("writing file error", error)
+                      }
+                  } cancelBlock: {
+                      reject("USER_CANCELLED", "User has cancelled", nil)
+                  }
+              }
+
             }
         } reject: {_ in
             reject("LOAD_IMAGE_FAILED", "Load image failed: " + path, nil)
         }
     }
-    
-    func onCancel() {
-        self.reject("USER_CANCELLED", "User has cancelled", nil)
-    }
-    
-    private func setConfiguration(options: NSDictionary, resolve:@escaping RCTPromiseResolveBlock,reject:@escaping RCTPromiseRejectBlock) -> Void{
-        self.resolve = resolve;
-        self.reject = reject;
-        
-        //Config
-      ZLImageEditorConfiguration.default().editImageTools ([.draw, .clip, .textSticker, .mosaic ])
-        
-    }
-    
-    private func presentController(image: UIImage, animated: Bool) {
-        if let controller = UIApplication.getTopViewController() {
-            controller.modalTransitionStyle = .crossDissolve
-            
-            ZLEditImageViewController.showEditImageVC(parentVC:controller, animate: animated, image: image) { [weak self] (resImage, editModel) in
-                let documentsPath = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0] as String
-                
-                let destinationPath = URL(fileURLWithPath: documentsPath).appendingPathComponent(String(Int64(Date().timeIntervalSince1970 * 1000)) + ".png")
-                
-                do {
-                    try resImage.pngData()?.write(to: destinationPath)
-                    self?.resolve(destinationPath.absoluteString)
-                } catch {
-                    debugPrint("writing file error", error)
-                }
-            } cancelBlock: {
-                self.onCancel()
-            }
-        }
-    }
-    
     
     private func getUIImage (url: String ,completion:@escaping (UIImage) -> (), reject:@escaping(String)->()){
         if let path = URL(string: url) {

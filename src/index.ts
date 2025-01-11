@@ -1,9 +1,10 @@
 import { NativeModules } from 'react-native';
 
 export type Options = {
-  path: String;
-  stickers: Array<String>;
+  path: string;
+  stickers?: Array<string>;
   animated: boolean;
+  photoQuality: number;
 };
 
 export type ErrorCode =
@@ -15,7 +16,7 @@ export type ErrorCode =
   | 'ERROR_UNKNOW';
 
 type PhotoEditorType = {
-  open(option: Options): Promise<String>;
+  open(option: Options): Promise<string>;
 };
 
 const { PhotoEditor } = NativeModules;
