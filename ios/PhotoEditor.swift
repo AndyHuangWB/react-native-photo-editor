@@ -33,10 +33,15 @@ class PhotoEditor: NSObject {
         }
         
         asset = .init(type: .imageData(data))
+        var config = EditorConfiguration()
+        config.toolsView.toolOptions = config.toolsView.toolOptions.filter { element in 
+            element.type == .cropSize || element.type == .text || 
+            element.type == .graffiti || element.type == .mosaic
+        }
         
         Task {
             do {
-                let editorAsset = try await Photo.edit(asset)
+                let editorAsset = try await Photo.edit(asset, config: config)
                 resolve(editorAsset.result?.url.absoluteString ?? path)
             } catch {
                 reject("USER_CANCELLED", "User has cancelled", error)
